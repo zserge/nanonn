@@ -15,41 +15,43 @@ func TestLayerOr(t *testing.T) {
 	y := [][]float64{{0}, {1}, {1}, {1}}
 	e := make([]float64, 1, 1)
 	// A layer of a single unit with two x and one output
-	l := NewDense(1, 2)
-	for iter := 0; iter < 1000; iter++ {
+	l := Dense(1, 2)
+	// Train layer for several epochs
+	for epoch := 0; epoch < 1000; epoch++ {
 		for i, x := range x {
 			z := l.Forward(x)
 			e[0] = y[i][0] - z[0]
 			l.Backward(x, e, 1)
 		}
 	}
+	// Predict the outputs, expecting only a small error
 	for i, x := range x {
 		z := l.Forward(x)
-		t.Log(z, y[i])
 		if math.Abs(z[0]-y[i][0]) > 0.1 {
 			t.Error(x, z, y[i])
 		}
 	}
 }
 
+// Use hidden layer to predict XOR function
 func TestNetworkXor(t *testing.T) {
 	x := [][]float64{{0, 0}, {0, 1}, {1, 0}, {1, 1}}
 	y := [][]float64{{0}, {1}, {1}, {0}}
-	n := Network{NewDense(4, 2), NewDense(1, 4)}
-	for iter := 0; iter < 1000; iter++ {
+	n, _ := New(Dense(4, 2), Dense(1, 4))
+	// Train for several epochs, or until the error is less than 2%
+	for epoch := 0; epoch < 1000; epoch++ {
+		e := 0.0
 		for i := range x {
-			n.Train(x[i], y[i], 1)
+			e = e + n.Train(x[i], y[i], 1)
+		}
+		if e < 0.02 {
+			return
 		}
 	}
-	for i := range x {
-		z := n.Predict(x[i])
-		t.Log(z, y[i])
-		if math.Abs(z[0]-y[i][0]) > 0.1 {
-			t.Error(x, z, y[i])
-		}
-	}
+	t.Error("failed to train")
 }
 
+// Use multiple hidden layers to predict sinc(x) function.
 func TestNetworkSinc(t *testing.T) {
 	sinc := func(x float64) float64 {
 		if x == 0 {
@@ -58,31 +60,28 @@ func TestNetworkSinc(t *testing.T) {
 			return math.Sin(x) / x
 		}
 	}
-	n := Network{NewDense(5, 1), NewDense(10, 5), NewDense(1, 10)}
-	eval := func() float64 {
-		e := float64(0)
-		for i := 0; i < 100; i++ {
-			x := rand.Float64()*2 - 1
-			y := sinc(x)
-			z := n.Predict([]float64{x})
-			e = e + math.Abs(z[0]-y)
-		}
-		return e / 100
-	}
-	for i := 0; i < 100; i++ {
-		x := rand.Float64()*2 - 1
-		n.Train([]float64{x}, []float64{sinc(x)}, 1)
-		e := eval()
-		if i%10 == 0 {
-			t.Log(e)
+	n, _ := New(Dense(5, 1), Dense(10, 5), Dense(1, 10))
+	e := 0.0
+	for i := 0; i < 2000; i++ {
+		x := rand.Float64()*10 - 5
+		e = e + n.Train([]float64{x}, []float64{sinc(x)}, 1)
+		if i%10 == 9 {
+			if e/10 < 0.001 {
+				return
+			}
+			t.Log(e / 10)
+			e = 0
 		}
 	}
+	t.Error("failed to train")
 }
 
+// Train and test on Iris dataset
 func TestIris(t *testing.T) {
 	x, y := loadCSV("../testdata/iris.csv")
-	n := Network{NewDense(10, 4), NewDense(5, 10), NewDense(3, 5)}
-	k := len(x) * 9 / 10
+	n, _ := New(Dense(10, 4), Dense(5, 10), Dense(3, 5))
+	k := len(x) * 9 / 10 // use 90% for training, 10% for testing
+	// replace Y with a 3-item vector for classification
 	for i := range y {
 		n := y[i][0]
 		y[i] = []float64{0, 0, 0}
@@ -102,25 +101,27 @@ func TestIris(t *testing.T) {
 		}
 		return m
 	}
-	eval := func() (e float64) {
-		for i := 0; i < len(x); i++ {
-			z := n.Predict(x[i])
-			if maxind(z) != maxind(y[i]) {
-				e++
+
+	for epoch := 0; epoch < 10000; epoch++ {
+		e := 0.0
+		for i := 0; i < k; i++ {
+			e = e + n.Train(x[i], y[i], 0.1)
+		}
+		if e/float64(k) < 0.005 {
+			// Classify all data
+			for i := 0; i < len(x); i++ {
+				z := n.Predict(x[i])
+				if maxind(z) != maxind(y[i]) {
+					t.Log(x[i], y[i], z)
+				}
 			}
+			return
 		}
-		return e
-	}
-	for iter := 0; iter < 200000; iter++ {
-		i := rand.Intn(k)
-		n.Train(x[i], y[i], 0.1)
-		if iter%1000 == 0 {
-			t.Log(eval())
+		if epoch%10 == 0 {
+			t.Log(e / float64(k))
 		}
 	}
-	if eval() > 5 {
-		t.Fail()
-	}
+	t.Error("failed to train")
 }
 
 func loadCSV(filename string) (x [][]float64, y [][]float64) {

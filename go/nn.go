@@ -1,9 +1,10 @@
 // NanoNN is a very simple implementation of a basic neural network with hidden
 // layers. Out of the box it comes with a fully connected dense layer
-// implenentation, but it can be extended with custom layer types if needed.
+// implementation, but it can be extended with custom layer types if needed.
 package nn
 
 import (
+	"fmt"
 	"math"
 	"math/rand"
 )
@@ -11,8 +12,18 @@ import (
 // Network is a sequence of layers.
 type Network []Layer
 
-func New(layers ...Layer) Network {
-	return Network(layers)
+// New returns a new sequential network constructed from the given layers. An
+// error is returned if the number of inputs and outputs in two adjacent layers
+// is not the same.
+func New(layers ...Layer) (Network, error) {
+	for i, l := range layers {
+		if i > 0 {
+			if a, b := l.Inputs(), layers[i-1].Outputs(); a != b {
+				return nil, fmt.Errorf("expected %d inputs, got %d", a, b)
+			}
+		}
+	}
+	return Network(layers), nil
 }
 
 // Predict passes input vector x into the network and returns the output vector.
@@ -66,8 +77,8 @@ type dense struct {
 	errors  []float64
 }
 
-// NewDense returns a new dense fully-connected layer with sigmoid activation function and the given number of inputs and neurons.
-func NewDense(units, inputs int) Layer {
+// Dense returns a new dense fully-connected layer with sigmoid activation function and the given number of inputs and neurons.
+func Dense(units, inputs int) Layer {
 	l := &dense{
 		weights: make([]float64, units*(inputs+1), units*(inputs+1)),
 		outputs: make([]float64, units, units),
