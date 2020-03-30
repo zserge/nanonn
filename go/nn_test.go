@@ -62,52 +62,21 @@ func TestWeights(t *testing.T) {
 		t.Log(e)
 	}
 
-	// Backpropagtion
+	// Backpropagtion with rate 0.5
 	n.Train([]float64{0.05, 0.1}, []float64{0.01, 0.99}, 0.5)
 
-	// Check weights of the output layer
-	if math.Abs(l2.Weights()[0]-0.35891648) > 0.001 {
-		t.Error(l2.Weights())
+	// Check weights
+	for i, w := range []float64{0.35891648, 0.408666186, 0.530751, 0.511301270, 0.561370121, 0.619049} {
+		if math.Abs(l2.Weights()[i]-w) > 0.001 {
+			t.Error(i, w, l2.Weights())
+		}
 	}
-	if math.Abs(l2.Weights()[1]-0.408666186) > 0.001 {
-		t.Error(l2.Weights())
-	}
-	if math.Abs(l2.Weights()[3]-0.511301270) > 0.001 {
-		t.Error(l2.Weights())
-	}
-	if math.Abs(l2.Weights()[4]-0.561370121) > 0.001 {
-		t.Error(l2.Weights())
+	for i, w := range []float64{0.149780716, 0.19956143, 0.345614, 0.24975114, 0.29950229, 0.345023} {
+		if math.Abs(l1.Weights()[i]-w) > 0.001 {
+			t.Error(i, w, l1.Weights())
+		}
 	}
 
-	// Check biases of the output layer
-	if math.Abs(l2.Weights()[2]-0.530751) > 0.001 {
-		t.Error(l2.Weights())
-	}
-	if math.Abs(l2.Weights()[5]-0.619049) > 0.001 {
-		t.Error(l2.Weights())
-	}
-
-	// Check weights of the hidden layer
-	if math.Abs(l1.Weights()[0]-0.149780716) > 0.001 {
-		t.Error(l1.Weights())
-	}
-	if math.Abs(l1.Weights()[1]-0.19956143) > 0.001 {
-		t.Error(l1.Weights())
-	}
-	if math.Abs(l1.Weights()[3]-0.24975114) > 0.001 {
-		t.Error(l1.Weights())
-	}
-	if math.Abs(l1.Weights()[4]-0.29950229) > 0.001 {
-		t.Error(l1.Weights())
-	}
-
-	// Check biases of the hidden layer
-	if math.Abs(l1.Weights()[2]-0.345614) > 0.001 {
-		t.Error(l1.Weights())
-	}
-	if math.Abs(l1.Weights()[5]-0.345023) > 0.001 {
-		t.Error(l1.Weights())
-	}
 }
 
 // Use single unit layer to predict OR function
