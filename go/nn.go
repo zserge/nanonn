@@ -10,7 +10,9 @@ import (
 )
 
 // Network is a sequence of layers.
-type Network []Layer
+type Network struct {
+	layers []Layer
+}
 
 // New returns a new sequential network constructed from the given layers. An
 // error is returned if the number of inputs and outputs in two adjacent layers
@@ -19,16 +21,16 @@ func New(layers ...Layer) (Network, error) {
 	for i, l := range layers {
 		if i > 0 {
 			if a, b := l.Inputs(), layers[i-1].Outputs(); a != b {
-				return nil, fmt.Errorf("expected %d inputs, got %d", a, b)
+				return Network{}, fmt.Errorf("expected %d inputs, got %d", a, b)
 			}
 		}
 	}
-	return Network(layers), nil
+	return Network{layers: layers}, nil
 }
 
 // Predict passes input vector x into the network and returns the output vector.
 func (n Network) Predict(x []float64) []float64 {
-	for _, l := range n {
+	for _, l := range n.layers {
 		x = l.Forward(x)
 	}
 	return x
@@ -37,8 +39,8 @@ func (n Network) Predict(x []float64) []float64 {
 // Train runs one backpropagation iteration through the network. It takes input
 // vector x and expected output vector y, also a learning rate parameter.
 func (n Network) Train(x, y []float64, rate float64) float64 {
-	inputs := make([][]float64, len(n), len(n))
-	for i, l := range n {
+	inputs := make([][]float64, len(n.layers), len(n.layers))
+	for i, l := range n.layers {
 		inputs[i] = x
 		x = l.Forward(x)
 	}
@@ -48,8 +50,8 @@ func (n Network) Train(x, y []float64, rate float64) float64 {
 		errors[i] = y[i] - x[i]
 		e += errors[i] * errors[i]
 	}
-	for i := len(n) - 1; i >= 0; i-- {
-		errors = n[i].Backward(inputs[i], errors, rate)
+	for i := len(n.layers) - 1; i >= 0; i-- {
+		errors = n.layers[i].Backward(inputs[i], errors, rate)
 	}
 	return e / float64(len(y))
 }
