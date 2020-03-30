@@ -157,9 +157,8 @@ func TestNetworkSinc(t *testing.T) {
 	sinc := func(x float64) float64 {
 		if x == 0 {
 			return 1
-		} else {
-			return math.Sin(x) / x
 		}
+		return math.Sin(x) / x
 	}
 	n, _ := New(Dense(5, 1), Dense(10, 5), Dense(1, 10))
 	for i := 0; i < 1000; i++ {

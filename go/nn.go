@@ -1,5 +1,5 @@
-// NanoNN is a very simple implementation of a basic neural network with hidden
-// layers. Out of the box it comes with a fully connected dense layer
+// Package nn is a very simple implementation of a basic neural network with
+// hidden layers. Out of the box it comes with a fully connected dense layer
 // implementation, but it can be extended with custom layer types if needed.
 package nn
 
