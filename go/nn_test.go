@@ -221,6 +221,17 @@ func TestIris(t *testing.T) {
 	t.Error("failed to train", e)
 }
 
+func BenchmarkTrain(b *testing.B) {
+	n, _ := New(Dense(10, 1), Dense(3, 10), Dense(1, 3))
+	x := []float64{0}
+	y := []float64{0}
+	for i := 0; i < b.N; i++ {
+		x[0] = rand.Float64()*10 - 5
+		y[0] = math.Sin(x[0])
+		n.Train(x, y, 0.5)
+	}
+}
+
 func loadCSV(filename string) (x [][]float64, y [][]float64) {
 	f, _ := os.Open(filename)
 	defer f.Close()
