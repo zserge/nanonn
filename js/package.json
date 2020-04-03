@@ -1,0 +1,33 @@
+{
+  "name": "nanonn",
+  "version": "0.1.0",
+  "description": "",
+  "main": "nn.js",
+  "type": "module",
+  "scripts": {
+    "test": "eslint nn.js nn_test.js && node --experimental-modules nn_test.js",
+    "minify": "terser --compress=drop_console,ecma=6,passes=2 --mangle --module -- nn.js > nn.min.js && gzip -cf9 nn.min.js > nn.min.js.gz && ls -l nn.*"
+  },
+  "author": "",
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "eslint": "^6.8.0",
+    "terser": "^4.6.10"
+  },
+  "eslintConfig": {
+    "extends": [
+      "eslint:recommended"
+    ],
+    "env": {
+      "browser": true,
+      "node": true
+    },
+    "parserOptions": {
+      "ecmaVersion": "2015",
+      "sourceType": "module"
+    },
+    "rules": {
+			"comma-dangle": ["error", "always-multiline"]
+    }
+  }
+}

@@ -17,13 +17,13 @@
 export const NN = (...layers) => {
   const nn = layers;
   // Predict returns a predicted outputs vector for the given input vector x.
-  nn.predict = x => nn.reduce((x, l) => l.forward(x), x);
+  nn.predict = x => nn.reduce((x, l) => l.forward(x, nn, false), x);
   // Train performs a single iteration of backpropagation and returns an
   // evaluation error.
   nn.train = (x, y, rate = 1) => {
-    const inputs = [x, ...nn.map(l => (x = l.forward(x)))];
+    const inputs = [x, ...nn.map(l => (x = l.forward(x, nn, true)))];
     const errors = y.map((yi, i) => yi - x[i]);
-    nn.reduceRight((e, l, i) => l.backward(inputs[i], e, rate), errors);
+    nn.reduceRight((e, l, i) => l.backward(inputs[i], e, rate, nn), errors);
     return errors.reduce((sum, ei) => sum + ei * ei, 0) / y.length;
   };
   return nn;
@@ -42,13 +42,19 @@ export const relu = {
 };
 
 // Dense returns a fully connected dense layer
-export const Dense = ({units = 1, inputs = 1, act = sigm, bias = true, weights}) => {
+export const Dense = ({
+  units = 1,
+  inputs = 1,
+  act = sigm,
+  bias = true,
+  weights,
+}) => {
   const N = inputs + 1;
   const w = Array(units * N).fill(0); // weights and biases
   const e = Array(inputs).fill(0); // errors to return to the previous layer
   const z = Array(units).fill(0); // outputs to pass to the next layer
-	w.forEach((_, i) => (w[i] = weights ? weights[i] : Math.random()));
-	w.forward = x => {
+  w.forEach((_, i) => (w[i] = weights ? weights[i] : Math.random()));
+  w.forward = x => {
     z.forEach((_, i) => {
       let sum = x.reduce((sum, xj, j) => sum + xj * w[i * N + j], 0);
       z[i] = act.f(sum + (bias ? w[i * N + N - 1] : 0));
