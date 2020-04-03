@@ -24,7 +24,7 @@ export const NN = (...layers) => {
     const inputs = [x, ...nn.map(l => (x = l.forward(x, nn, true)))];
     const errors = y.map((yi, i) => yi - x[i]);
     nn.reduceRight((e, l, i) => l.backward(inputs[i], e, rate, nn), errors);
-    return errors.reduce((sum, ei) => sum + ei * ei, 0) / y.length;
+    return errors.reduce((sum, ei) => sum + ei * ei, 0) / 2;
   };
   return nn;
 };
@@ -53,7 +53,7 @@ export const Dense = ({
   const w = Array(units * N).fill(0); // weights and biases
   const e = Array(inputs).fill(0); // errors to return to the previous layer
   const z = Array(units).fill(0); // outputs to pass to the next layer
-  w.forEach((_, i) => (w[i] = weights ? weights[i] : Math.random()));
+  w.forEach((_, i) => (w[i] = weights ? weights[i] : Math.random() / 100));
   w.forward = x => {
     z.forEach((_, i) => {
       let sum = x.reduce((sum, xj, j) => sum + xj * w[i * N + j], 0);
