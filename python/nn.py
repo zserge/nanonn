@@ -53,6 +53,7 @@ class Dense:
     ):
         self.units = units
         self.inputs = inputs
+        self.use_bias = use_bias
         self.activation = activation
         self.weights = weights
         # He et al random weight initialization
@@ -77,7 +78,8 @@ class Dense:
             w = 0
             for j in range(self.inputs):
                 w = w + x[j] * self.weights[i * N + j]
-            self.outputs[i] = self.activation[0](w + self.weights[i * N + N - 1])
+            if self.use_bias:
+                self.outputs[i] = self.activation[0](w + self.weights[i * N + N - 1])
         return self.outputs
 
     def backward(self, nn, x, e, rate):
@@ -90,5 +92,6 @@ class Dense:
         for i in range(self.units):
             for j in range(self.inputs):
                 self.weights[i * N + j] += rate * e[i] * df(self.outputs[i]) * x[j]
-            self.weights[i * N + N - 1] += rate * e[i] * df(self.outputs[i])
+            if self.use_bias:
+                self.weights[i * N + N - 1] += rate * e[i] * df(self.outputs[i])
         return self.errors
