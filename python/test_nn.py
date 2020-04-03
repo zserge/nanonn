@@ -13,9 +13,9 @@ class TestNN(unittest.TestCase):
         l = Dense(
             units=1, inputs=3, weights=[1.74481176, -0.7612069, 0.3190391, -0.24937038]
         )
-        z1 = l([1.62434536, -0.52817175, 0.86540763])
+        z1 = l(None, [1.62434536, -0.52817175, 0.86540763])
         self.assertAlmostEqual(z1[0], 0.96313579)
-        z2 = l([-0.61175641, -1.07296862, -2.3015387])
+        z2 = l(None, [-0.61175641, -1.07296862, -2.3015387])
         self.assertAlmostEqual(z1[0], 0.22542973)
 
     def test_weights(self):

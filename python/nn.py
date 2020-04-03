@@ -27,21 +27,21 @@ class NN:
 
     def predict(self, x):
         for l in self.layers:
-            x = l(x)
+            x = l(self, x)
         return x
 
     def train(self, x, y, rate=1):
         inputs = [0 for l in self.layers]
         for i, l in enumerate(self.layers):
             inputs[i] = x
-            x = l(x)
+            x = l(self, x, True)
         e = 0
         errors = [0 for i in range(len(y))]
         for i in range(len(y)):
             errors[i] = y[i] - x[i]
             e += errors[i] * errors[i]
         for i in range(len(self.layers) - 1, 0, -1):
-            errors = self.layers[i].backward(inputs[i], errors, rate)
+            errors = self.layers[i].backward(self, inputs[i], errors, rate)
         return e / len(y)
 
 
@@ -64,7 +64,7 @@ class Dense:
     def get_weights(self):
         return self.weights
 
-    def __call__(self, x):
+    def __call__(self, nn, x, training=False):
         N = self.inputs + 1
         for i in range(self.units):
             w = 0
@@ -73,7 +73,7 @@ class Dense:
             self.outputs[i] = self.activation[0](w + self.weights[i * N + N - 1])
         return self.outputs
 
-    def backward(self, x, e, rate=1):
+    def backward(self, nn, x, e, rate):
         N = self.inputs + 1
         df = self.activation[1]
         for j in range(self.inputs):
