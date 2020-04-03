@@ -1,5 +1,5 @@
 import unittest
-from nn import NN, Dense, sigmoid
+from nn import NN, Dense, sigmoid, relu, linear
 
 
 class TestNN(unittest.TestCase):
@@ -8,6 +8,22 @@ class TestNN(unittest.TestCase):
         self.assertAlmostEqual(sigmoid[0](2), 0.88079708)
         self.assertAlmostEqual(sigmoid[1](0), 0)
         self.assertAlmostEqual(sigmoid[1](2), -2)
+
+    def test_relu(self):
+        self.assertAlmostEqual(relu[0](-2), 0)
+        self.assertAlmostEqual(relu[0](0), 0)
+        self.assertAlmostEqual(relu[0](2), 2)
+        self.assertAlmostEqual(relu[1](-2), 0)
+        self.assertAlmostEqual(relu[1](0), 0)
+        self.assertAlmostEqual(relu[1](2), 1)
+
+    def test_linear(self):
+        self.assertAlmostEqual(linear[0](-2), -2)
+        self.assertAlmostEqual(linear[0](0), 0)
+        self.assertAlmostEqual(linear[0](2), 2)
+        self.assertAlmostEqual(linear[1](-2), 1)
+        self.assertAlmostEqual(linear[1](0), 1)
+        self.assertAlmostEqual(linear[1](2), 1)
 
     def test_forward(self):
         l = Dense(

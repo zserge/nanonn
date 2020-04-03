@@ -12,10 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from math import exp
+from math import exp, sqrt
 from random import uniform
 
 sigmoid = (lambda x: 1 / (1 + exp(-x)), lambda x: x * (1 - x))
+relu = (lambda x: x * (x > 0), lambda x: 1.0 * (x > 0))
+linear = (lambda x: x, lambda x: 1)
 
 
 class NN:
@@ -53,8 +55,13 @@ class Dense:
         self.inputs = inputs
         self.activation = activation
         self.weights = weights
+        # He et al random weight initialization
+        weights_range = sqrt(2 / inputs)
         if not self.weights:
-            self.weights = [uniform(-1, 1) for i in range(units * (inputs + 1))]
+            self.weights = [
+                uniform(-weights_range, weights_range)
+                for i in range(units * (inputs + 1))
+            ]
         self.outputs = [0 for i in range(units)]
         self.errors = [0 for i in range(inputs)]
 
