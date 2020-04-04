@@ -45,8 +45,6 @@ class TestNN(unittest.TestCase):
         e = nn.train([0.05, 0.1], [0.01, 0.99], 0)
         self.assertAlmostEqual(e, 0.298371109)
         nn.train([0.05, 0.1], [0.01, 0.99], 0.5)
-        print(nn[0].get_weights())
-        print(nn[1].get_weights())
         for i, w in enumerate([0.35891, 0.40866, 0.53075, 0.5113, 0.5613, 0.61904]):
             self.assertAlmostEqual(nn[1].get_weights()[i], w, delta=0.01)
         for i, w in enumerate([0.14978, 0.19956, 0.34561, 0.24975, 0.2995, 0.34502]):

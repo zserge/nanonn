@@ -42,7 +42,7 @@ class NN:
         for i in range(len(y)):
             errors[i] = y[i] - x[i]
             e += errors[i] * errors[i]
-        for i in range(len(self.layers) - 1, 0, -1):
+        for i in range(len(self.layers) - 1, -1, -1):
             errors = self.layers[i].backward(self, inputs[i], errors, rate)
         return e / len(y)
 
