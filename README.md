@@ -44,7 +44,7 @@ In a `Dense` layer units are represented as a weight matrix of M×(N+1) dimensio
 
 Forward propagation in a dense layer happens trivially, for each unit we multiply inputs to the weights and sum them up, then activation function `act` (typically, sigmoid, ReLU or SoftMax) is taken from that value, forming the output. To predict output from the input, the network calls forward propagation in each layer sequentially passing output vector from one layer to another:
 
-Z = act(W·X + W<sub>bias<sub>), or
+Z = act(W·X + W<sub>bias</sub>), or
 
 ```
 for i = 0..M
