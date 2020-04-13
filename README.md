@@ -9,75 +9,56 @@ In no sense it is a replacement for Tensorflow or PyTorch, but you might find th
 
 # Features
 
-* Implements a sequential multi-layer neural network.
-* A fully-connected dense layer is provided.
-* Can be extended by implementing other layer types manually.
-* Small, typical implenentation is around 100 lines of code.
-* Zero dependencies.
-* Covered with tests and benchmarks.
-* Simplicity and correctness is often more preferred than additional features or highly optimized performance.
+* Sequential feed-forward neural networks.
+* Fully-connected dense layers.
+* Various activation functions: sigmoid, SoftMax, ReLU, leaky ReLU and linear, optional bias, customizable cost function.
+* Weights and biases of each layer can be imported from outside, i.e. from a trained Tensorflow model.
+* Other layer types can be implemented and plugged in.
+* Full code is around 100 lines of code. In five minutes you can read it all.
+* Implementations available in many popular programming languages.
+* Zero dependencies. Seriously, very lightweight.
+* Comes with tests, benchmarks and examples.
 
-# Notation
+## Implementations
 
-* N - number of inputs.
-* M - number of outputs.
-* X - input vector of N elements.
-* Y - expected output vector of M elements.
-* Z - actual output vector of M elements.
-* W - weight matrix of N×M elements, or (N+1)×M elements when bias is enabled.
-* E - errors vector of M elements used in backpropagation.
-* E' - errors vector for the previous layer, of N elements.
-* D - delta vector of M elements used in backpropagation.
-* sigm - activation function, typically sigmoid, ReLU or SoftMax.
-* dsigm - partially derivated activation function.
-* rate - learning rate.
+* [C](c)
+* [JavaScript](js)
+* [Go](go)
+* [Python](python)
 
-# Implementation
+## Neural networks
 
-`Network` is simply a sequence of `Layers`. Layers are assumed to be sequential. During forward propagation ouptut vector from the previous layer is passed into the next layer. During backpropagation an input and an error vector from the one layer is passed into the prevous layer.
+Neural network (NN) is a technique for building a computer program that learns from data. It is loosely based on how the human brain works, but under the hood it's all about adding/multiplying arrays of numbers.
 
-`Layer` is an interface, to allow developers plug in their own layer types, if needed. Each layer consist of an array of units ("neurons"), and has a fixed number of inputs and outputs. The output shape of one layer should match the input shape of the following layer. Layers should allow to set and get weights matrix so that it would be possible to save and restore network state.
+NanoNN implements a sequential NN model, which is a linear list of layers of neurons:
 
-`Dense` layer is a fully-connected layer of units, where outputs of the previous layer are connected to each and every unit in the current layer.
+![nn](.assets/nn.svg)
 
-In a `Dense` layer units are represented as a weight matrix of M×(N+1) dimensions, where `N` is a number of inputs and `M` is a number of outputs of the layer. One is added to the number of outputs to keep bias value in the same weight matrix for simplicity. Most implementations will keep weight matrix as a linear array, in this case each "row" represents the weights of a single unit (including bias):
+Layers are tall rectangles. The way how NanoNN network works, is that it passes input vector `X` to the first layer, the resulting output vector is passed to the second layer as an input and so on. The output of the last layer is the result vector `Z`, or the "prediction" of the network. This mode is called "forward propagation", or "prediction mode", because the network predicts the output by the given input. How exactly the layers transform the input vector into the output one depends on the type of the layer and its parameters.
 
-Forward propagation in a dense layer happens trivially, for each unit we multiply inputs to the weights and sum them up, then activation function `act` (typically, sigmoid, ReLU or SoftMax) is taken from that value, forming the output. To predict output from the input, the network calls forward propagation in each layer sequentially passing output vector from one layer to another:
+To train the NanoNN model, one must also provide the expected output vector `Y`. NanoNN applies the _cost function_ to estimate how wrong the network was it its prediction, and passes this error vector to the last layer. The layer fixes itself, and passes an error vector to the previous one, and so on up to the first layer. The model can control how radical these "fixes" are by adjusting the _learning rate_ parameter.
 
-Z = act(W·X + W<sub>bias</sub>), or
+Yes, that's the whole architecture of NanoNN. One last thing to mention is that layers can store their internal data in network cache, if they want other layers to access it. Of course, different implementations are free to store internal layer state within the layer data type/class as well.
 
-```
-for i = 0..M
-	sum = 0
-	for j = 0..N
-		sum = sum + x[j]*w[i,j]
-	z[i] = sigm(sum + w[i,N+1])
-```
+## Layers
 
-Backpropagation is a little bit more tricky. Each layer should adjust its weights and return the error vector to help previous layers correct their weight too. For the output layer the error vector is calculated as a different between the expected and the actual outputs, E = Z - Y.
+Layers transform input vector into the output vector and adjust their parameters during training (_backpropagation_):
 
-In each layer a delta vector is calculated, D = E * dsigm(Z).
+![layer](.assets/layer.svg)
 
-Then the error vector for the previous layer is calculated as E' = D·W.
+The essense of the layer if a weight matrix, which defines how to multiply input vector to get the output. In the picture above the layer has 4 units (neurons) and 5 inputs. This, the weight matrix is 5x4=20 elements. Most implementations store weight matrix as a linear array for simplify.
 
-Finally, the weights are adjusted, W = W + X·D.
+Apart from the weights, each unit has a bias value, which is added to the resulting dot product of the input vector `X` to the weight matrix `W`. Bias is completely optional, but often useful.
 
-This procedure is repeated from the output layer to the input layer.
+The resulting vector is then passed through some activation function, which transform it into a non-linear space. A well-known book example of the activation function is sigmoid (`1/(1+e^x)`). But also, ReLU is quite popular due to its simplicity. NanoNN comes with a whole range of activation functions. Linear activation function does not transform anything at all, and it can be used to inject custom activation functions as separate layers.
 
-```
-for j = 0..N
-	E'[j] = 0
-	for i = 0..M
-		E'[j] = E'[j] + E[i]*dsigm(Z[i] * W[i,j])
-for i = 0..M
-	for j = 0..N
-		W[i,j] = W[i,j] + rate * E[i] * dsigm(Z[i]*X[j])
-	W[i,N+1] = W[i,N+1] + rate * E[i] * dsigm(Z[i])
-```
+Training a layer requires taking an error vector and adjusting the weights depending on how big is the error and what the input related to that weight was. The details of the backpropagation algorithm can be found in the concrete implementations.
+
+So, yes, the only layer comping out box is a fully connected Dense layer, with optional bias and dropout, but layer is often an abstract type (interface), so their implementations are up to you, if you need them. You may not implement backwards propagation if you don't expect your network to be trained.
 
 ## Contributing
 
-Pull requests are welcome. For new features or major changes, please open an issue first to discuss what you would like to change.
+Pull requests are welcome. For new features or major changes, please open an issue first to discuss what you would like to change. Implementations if other programming languages are always welcome! 
 
 ## License
 
