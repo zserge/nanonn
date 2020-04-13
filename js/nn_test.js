@@ -1,4 +1,4 @@
-import {NN, Dense, sigm} from './nn.js';
+import {NN, Dense, sigmoid} from './nn.js';
 
 function eq(a, b) {
   if (Math.abs(a - b) > 0.0001) {
@@ -8,8 +8,8 @@ function eq(a, b) {
 
 function testSigmoid() {
   console.log('TEST: Sigmoid activation function');
-  eq(sigm.f(0), 0.5);
-  eq(sigm.f(2), 0.88079708);
+  eq(sigmoid.f(0), 0.5);
+  eq(sigmoid.f(2), 0.88079708);
 }
 
 function testForward() {

@@ -11,41 +11,112 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+//
 
-// Neural network is a sequence of layers. It is represented as an array with
-// two additional methods, predict and train.
+/**
+ * Predicts output vector by the given input vector.
+ * @name PredictFunction
+ * @function
+ * @param {...Number} [inputs] input vector.
+ * @returns {...Number} output vector.
+ */
+
+/**
+ * Trains layers to fit the expected output vector better.
+ * @name TrainFunction
+ * @function
+ * @param {...Number} [inputs] input vector.
+ * @param {...Number} [outputs] expected outputs vector.
+ * @param {Number} [rate] learning rate, use 0 to only calculate the error.
+ * @returns {Number} prediction error.
+ */
+
+/**
+ * A sequential neural network model.
+ * @typedef NN
+ * @type {object}
+ * @property {PredictFunction} predict Predict output by the given input vector.
+ * @property {function} train Adjust network layers to fit the expected output vector.
+ */
+
+/**
+ * Creates a neural network made of a sequence of layers. The network is
+ * represented as an array of layers with two additional methods, predict and
+ * train.
+ *
+ * @function
+ * @param {...Layer} [layers] Variadic list of layers.
+ * @returns {NN} A neural network model.
+ *
+ * @example
+ * const nn = NN(Dense({units: 10, inputs: 4}), Dense({inputs: 10, units: 2}));
+ */
 export const NN = (...layers) => {
   const nn = layers;
+  // Cost function, mean squared error.
+  nn.cost = (x, y) => {
+    const errors = y.map((yi, i) => yi - x[i]);
+    return [errors.reduce((sum, ei) => sum + ei * ei, 0) / y.length, ...errors];
+  };
   // Predict returns a predicted outputs vector for the given input vector x.
   nn.predict = x => nn.reduce((x, l) => l.forward(x, nn, false), x);
   // Train performs a single iteration of backpropagation and returns an
   // evaluation error.
   nn.train = (x, y, rate = 1) => {
     const inputs = [x, ...nn.map(l => (x = l.forward(x, nn, true)))];
-    const errors = y.map((yi, i) => yi - x[i]);
+    const [totalError, ...errors] = nn.cost(x, y);
     nn.reduceRight((e, l, i) => l.backward(inputs[i], e, rate, nn), errors);
-    return errors.reduce((sum, ei) => sum + ei * ei, 0) / 2;
+    return totalError;
   };
   return nn;
 };
 
-// Sigmoid activation function and its derivative
-export const sigm = {
+/** Sigmoid activation function and its derivative */
+export const sigmoid = {
   f: x => 1 / (1 + Math.exp(-x)),
   df: x => x * (1 - x),
 };
 
-// ReLU activation function and its derivative
+/** ReLU activation function */
 export const relu = {
   f: x => (x > 0 ? x : 0),
   df: x => (x > 0 ? 1 : 0),
 };
 
-// Dense returns a fully connected dense layer
+/** Leaky ReLU activation function */
+export const lrelu = {
+  f: x => (x > 0 ? x : 0.01 * x),
+  df: x => (x > 0 ? 1 : 0.01),
+};
+
+/** Linear activation function */
+export const linear = {
+  f: x => x,
+  df: () => 1.0,
+};
+
+/** SoftMax activation function */
+export const softmax = {
+  f: x => Math.log(1.0 + Math.exp(x)),
+  df: x => 1.0 / (1.0 + Math.exp(-x)),
+};
+
+/**
+ * Returns a fully connected dense layer.
+ * @function
+ * @param options Layer configuration.
+ * @param options.inputs {Number} Number of layer inputs. Must match the number
+ * of units in the previous layer, or the size of the input vector.
+ * @param options.units {Number} Number of units (neurons).
+ * @param [options.act] {ActivationFunction} Activation function.
+ * @param [options.bias] {Boolean} Add trainable bias value. True by default.
+ * @param [options.weights] {Array.<Number>} Optional weights matrix. Initialized randomly by default.
+ * @returns Layer A dense layer object.
+ */
 export const Dense = ({
   units = 1,
   inputs = 1,
-  act = sigm,
+  act = sigmoid,
   bias = true,
   weights,
 }) => {
