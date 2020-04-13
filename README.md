@@ -14,17 +14,20 @@ In no sense it is a replacement for Tensorflow or PyTorch, but you might find th
 * Various activation functions: sigmoid, SoftMax, ReLU, leaky ReLU and linear, optional bias, customizable cost function.
 * Weights and biases of each layer can be imported from outside, i.e. from a trained Tensorflow model.
 * Other layer types can be implemented and plugged in.
-* Full code is around 100 lines of code. In five minutes you can read it all.
+* Full code is around 100-200 lines of code. In five minutes you can read it all.
 * Implementations available in many popular programming languages.
 * Zero dependencies. Seriously, very lightweight.
 * Comes with tests, benchmarks and examples.
 
 ## Implementations
 
-* [C](c)
-* [JavaScript](js)
-* [Go](go)
-* [Python](python)
+* [C](c), good old C89, no memory allocations, vectorization where possible.
+* [JavaScript](js), ES6, less than 1KB minified and gzipped, your browser won't even notice.
+* [Go](go), straight and to the point.
+* [Python](python), it's math after all. No numpy knowledge is required.
+* Java, the most boring one. Coming soon.
+* Swift, at least it's not Objective-C. Coming soon.
+* Rust, because WebAssembly. Help wanted.
 
 ## Neural networks
 
