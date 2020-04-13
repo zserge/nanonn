@@ -32,7 +32,7 @@ Neural network (NN) is a technique for building a computer program that learns f
 
 NanoNN implements a sequential NN model, which is a linear list of layers of neurons:
 
-![nn](.assets/nn.svg)
+![nn](.assets/nn.png)
 
 Layers are tall rectangles. The way how NanoNN network works, is that it passes input vector `X` to the first layer, the resulting output vector is passed to the second layer as an input and so on. The output of the last layer is the result vector `Z`, or the "prediction" of the network. This mode is called "forward propagation", or "prediction mode", because the network predicts the output by the given input. How exactly the layers transform the input vector into the output one depends on the type of the layer and its parameters.
 
@@ -44,7 +44,7 @@ Yes, that's the whole architecture of NanoNN. One last thing to mention is that 
 
 Layers transform input vector into the output vector and adjust their parameters during training (_backpropagation_):
 
-![layer](.assets/layer.svg)
+![layer](.assets/layer.png)
 
 The essense of the layer if a weight matrix, which defines how to multiply input vector to get the output. In the picture above the layer has 4 units (neurons) and 5 inputs. This, the weight matrix is 5x4=20 elements. Most implementations store weight matrix as a linear array for simplify.
 
