@@ -29,7 +29,9 @@ struct nn_vec {
 
 #define NN_FLAG_LINEAR (0 << 1)
 #define NN_FLAG_RELU (1 << 1)
-#define NN_FLAG_SIGMOID (2 << 1)
+#define NN_FLAG_LRELU (2 << 1)
+#define NN_FLAG_SIGMOID (3 << 1)
+#define NN_FLAG_SOFTMAX (4 << 1)
 #define NN_ACTFN (3 << 1)
 
 struct nn_layer {
@@ -157,8 +159,14 @@ float nn_train(struct nn_layer *layers, float *x, float *y, float rate) {
     l->backward(l, e, rate);
     e = l->errors.data;
   } while (l-- != layers);
-  return error; 
+  return error;
 }
+
+#define NN_ACT_LINEAR(x) (x)
+#define NN_ACT_SIGMOID(x) (1.0 / (1.0 + exp(-(x))))
+#define NN_ACT_RELU(x) ((x) * ((x) > 0))
+#define NN_ACT_LRELU(x) ((x) > 0 ? (x) : 0.01 * (x))
+#define NN_ACT_SOFTMAX(x) log(1.0 + exp(x))
 
 static void nn_dense_forward(struct nn_layer *l, int training) {
   int i, j;
@@ -179,21 +187,29 @@ static void nn_dense_forward(struct nn_layer *l, int training) {
   switch (l->flags & NN_ACTFN) {
   case NN_FLAG_SIGMOID:
     for (i = 0; i < l->output.len; i++) {
-      l->output.data[i] = 1.0 / (1.0 + exp(-l->output.data[i]));
+      l->output.data[i] = NN_ACT_SIGMOID(l->output.data[i]);
     }
     break;
   case NN_FLAG_RELU:
     /* This loop is likely to be vectorized */
     for (i = 0; i < l->output.len; i++) {
-      l->output.data[i] = l->output.data[i] * (l->output.data[i] > 0);
+      l->output.data[i] = NN_ACT_RELU(l->output.data[i]);
+    }
+    break;
+  case NN_FLAG_LRELU:
+    /* This loop is likely to be vectorized */
+    for (i = 0; i < l->output.len; i++) {
+      l->output.data[i] = NN_ACT_LRELU(l->output.data[i]);
     }
     break;
   }
 }
 
-#define NN_DACT_SIGM(x) ((x) * (1 - (x)))
-#define NN_DACT_RELU(x) (1.0 * ((x) > 0))
 #define NN_DACT_LINEAR(x) 1.0
+#define NN_DACT_RELU(x) (1.0 * ((x) > 0))
+#define NN_DACT_LRELU(x) ((x) > 0 ? 1.0 : 0.01)
+#define NN_DACT_SIGMOID(x) ((x) * (1 - (x)))
+#define NN_DACT_SOFTMAX(x) (1.0 / (1.0 + exp(-x)))
 
 static void nn_dense_backward(struct nn_layer *l, float *e, float rate) {
   int i, j;
@@ -202,9 +218,9 @@ static void nn_dense_backward(struct nn_layer *l, float *e, float rate) {
     float sum_e = 0;
     /* These loops are likely to be vectorized */
     switch (l->flags & NN_ACTFN) {
-    case NN_FLAG_SIGMOID:
+    case NN_FLAG_LINEAR:
       for (i = 0; i < l->output.len; i++) {
-	sum_e = sum_e + e[i] * NN_DACT_SIGM(l->output.data[i]) *
+	sum_e = sum_e + e[i] * NN_DACT_LINEAR(l->output.data[i]) *
 			    l->weights.data[i * n + j];
       }
       break;
@@ -214,9 +230,21 @@ static void nn_dense_backward(struct nn_layer *l, float *e, float rate) {
 			    l->weights.data[i * n + j];
       }
       break;
-    case NN_FLAG_LINEAR:
+    case NN_FLAG_LRELU:
       for (i = 0; i < l->output.len; i++) {
-	sum_e = sum_e + e[i] * NN_DACT_LINEAR(l->output.data[i]) *
+	sum_e = sum_e + e[i] * NN_DACT_LRELU(l->output.data[i]) *
+			    l->weights.data[i * n + j];
+      }
+      break;
+    case NN_FLAG_SIGMOID:
+      for (i = 0; i < l->output.len; i++) {
+	sum_e = sum_e + e[i] * NN_DACT_SIGMOID(l->output.data[i]) *
+			    l->weights.data[i * n + j];
+      }
+      break;
+    case NN_FLAG_SOFTMAX:
+      for (i = 0; i < l->output.len; i++) {
+	sum_e = sum_e + e[i] * NN_DACT_SOFTMAX(l->output.data[i]) *
 			    l->weights.data[i * n + j];
       }
       break;
@@ -227,14 +255,20 @@ static void nn_dense_backward(struct nn_layer *l, float *e, float rate) {
   for (i = 0; i < l->output.len; i++) {
     float dsigm = 0;
     switch (l->flags & NN_ACTFN) {
-    case NN_FLAG_SIGMOID:
-      dsigm = NN_DACT_SIGM(l->output.data[i]);
+    case NN_FLAG_LINEAR:
+      dsigm = NN_DACT_LINEAR(l->output.data[i]);
       break;
     case NN_FLAG_RELU:
       dsigm = NN_DACT_RELU(l->output.data[i]);
       break;
-    case NN_FLAG_LINEAR:
-      dsigm = NN_DACT_LINEAR(l->output.data[i]);
+    case NN_FLAG_LRELU:
+      dsigm = NN_DACT_LRELU(l->output.data[i]);
+      break;
+    case NN_FLAG_SIGMOID:
+      dsigm = NN_DACT_SIGMOID(l->output.data[i]);
+      break;
+    case NN_FLAG_SOFTMAX:
+      dsigm = NN_DACT_SOFTMAX(l->output.data[i]);
       break;
     }
     /* This loop is likely to be vectorized */
