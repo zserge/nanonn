@@ -28,4 +28,6 @@ network[0][1] = 0.5; // set weights individually
 
 ## Customizations
 
+Network is often customized by providing different layers. Additionally, one may replace network cost function (by default it is a mean squared error). 
+
 Dense layer can be customized by using various activation functions, enabling/disabling bias. Custom layer types can be implemented as well. A layer must be an object with two functions (methods) - `forward(inputVector, network)` and `backward(inputVector, errorVector, learningRate, network)`. See how Dense layer is implemented for more details.
