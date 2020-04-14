@@ -1,0 +1,6 @@
+*.o
+*.exe
+*.out
+nn_test
+nn_lint.c
+nn_lint.cxx
