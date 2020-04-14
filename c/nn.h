@@ -18,6 +18,7 @@
 
 #include <assert.h>
 #include <math.h>
+#include <stdio.h>
 #include <stdlib.h>
 
 struct nn_vec {
@@ -27,12 +28,12 @@ struct nn_vec {
 
 #define NN_FLAG_NO_BIAS 1
 
-#define NN_FLAG_LINEAR (0 << 1)
-#define NN_FLAG_RELU (1 << 1)
-#define NN_FLAG_LRELU (2 << 1)
-#define NN_FLAG_SIGMOID (3 << 1)
-#define NN_FLAG_SOFTMAX (4 << 1)
-#define NN_ACTFN (3 << 1)
+#define NN_FLAG_LINEAR (0 << 1u)
+#define NN_FLAG_RELU (1u << 1u)
+#define NN_FLAG_LRELU (2u << 1u)
+#define NN_FLAG_SIGMOID (3u << 1u)
+#define NN_FLAG_SOFTMAX (4u << 1u)
+#define NN_ACTFN (3u << 1u)
 
 struct nn_layer {
   unsigned int flags;
@@ -57,7 +58,7 @@ struct nn_layer {
   }
 
 void nn_print(struct nn_layer *layers) {
-  int i, j;
+  unsigned int i, j;
   struct nn_layer *l = layers;
   for (i = 0; !NN_LAYER_EMPTY(l); l++, i++) {
     printf("LAYER %d\n", i);
@@ -141,7 +142,7 @@ float *nn_predict(struct nn_layer *layers, float *x) {
 }
 
 float nn_train(struct nn_layer *layers, float *x, float *y, float rate) {
-  int i;
+  unsigned int i;
   float *e;
   float error = 0;
   struct nn_layer *l = layers;
@@ -163,14 +164,20 @@ float nn_train(struct nn_layer *layers, float *x, float *y, float rate) {
 }
 
 #define NN_ACT_LINEAR(x) (x)
-#define NN_ACT_SIGMOID(x) (1.0 / (1.0 + exp(-(x))))
 #define NN_ACT_RELU(x) ((x) * ((x) > 0))
 #define NN_ACT_LRELU(x) ((x) > 0 ? (x) : 0.01 * (x))
+#define NN_ACT_SIGMOID(x) (1.0 / (1.0 + exp(-(x))))
 #define NN_ACT_SOFTMAX(x) log(1.0 + exp(x))
 
+#define NN_ACT_LOOP(i, vec, fn)                                                \
+  for ((i) = 0; (i) < (vec).len; (i)++) {                                      \
+    (vec).data[(i)] = fn((vec).data[(i)]);                                     \
+  }
+
 static void nn_dense_forward(struct nn_layer *l, int training) {
-  int i, j;
-  int n = l->input.len + 1;
+  unsigned int i, j;
+  unsigned int n = l->input.len + 1;
+  (void)training;
   /* Sum the inputs multiplied by weights */
   for (i = 0; i < l->output.len; i++) {
     float sum = 0;
@@ -183,24 +190,20 @@ static void nn_dense_forward(struct nn_layer *l, int training) {
     }
     l->output.data[i] = sum;
   }
-  /* Apply activation function, for NN_FLAG_LINEAR do nothing */
+  /* Apply activation function, RELU and LRELU are likely to get vectorized,
+   * LINEAR does nothing */
   switch (l->flags & NN_ACTFN) {
-  case NN_FLAG_SIGMOID:
-    for (i = 0; i < l->output.len; i++) {
-      l->output.data[i] = NN_ACT_SIGMOID(l->output.data[i]);
-    }
-    break;
   case NN_FLAG_RELU:
-    /* This loop is likely to be vectorized */
-    for (i = 0; i < l->output.len; i++) {
-      l->output.data[i] = NN_ACT_RELU(l->output.data[i]);
-    }
+    NN_ACT_LOOP(i, l->output, NN_ACT_RELU);
     break;
   case NN_FLAG_LRELU:
-    /* This loop is likely to be vectorized */
-    for (i = 0; i < l->output.len; i++) {
-      l->output.data[i] = NN_ACT_LRELU(l->output.data[i]);
-    }
+    NN_ACT_LOOP(i, l->output, NN_ACT_LRELU);
+    break;
+  case NN_FLAG_SIGMOID:
+    NN_ACT_LOOP(i, l->output, NN_ACT_SIGMOID);
+    break;
+  case NN_FLAG_SOFTMAX:
+    NN_ACT_LOOP(i, l->output, NN_ACT_SOFTMAX);
     break;
   }
 }
@@ -212,8 +215,8 @@ static void nn_dense_forward(struct nn_layer *l, int training) {
 #define NN_DACT_SOFTMAX(x) (1.0 / (1.0 + exp(-x)))
 
 static void nn_dense_backward(struct nn_layer *l, float *e, float rate) {
-  int i, j;
-  int n = l->input.len + 1;
+  unsigned int i, j;
+  unsigned int n = l->input.len + 1;
   for (j = 0; j < l->input.len; j++) {
     float sum_e = 0;
     /* These loops are likely to be vectorized */

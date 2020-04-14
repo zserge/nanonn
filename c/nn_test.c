@@ -1,11 +1,11 @@
-#include <stdio.h>
 #include "nn.h"
+#include <stdio.h>
 
 int status = 0;
 
 #define ASSERT_EQ(a, b)                                                        \
   do {                                                                         \
-    if (fabs(a - b) > 0.001) {                                                 \
+    if (fabs((a) - (b)) > 0.001) {                                             \
       printf("FAIL:%d: %f != %f\n", __LINE__, a, b);                           \
       status = 1;                                                              \
     }                                                                          \
@@ -89,7 +89,7 @@ static void test_network_backward() {
 }
 
 int main() {
-  (void) test_network_forward;
+  (void)test_network_forward;
   /*test_network_forward();*/
   test_network_backward();
   return status;
