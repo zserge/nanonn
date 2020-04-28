@@ -89,8 +89,7 @@ static void test_network_backward() {
 }
 
 int main() {
-  (void)test_network_forward;
-  /*test_network_forward();*/
+  test_network_forward();
   test_network_backward();
   return status;
 }
