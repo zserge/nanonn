@@ -12,11 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from math import exp, sqrt
+from math import exp, sqrt, log
 from random import uniform
 
 sigmoid = (lambda x: 1 / (1 + exp(-x)), lambda x: x * (1 - x))
 relu = (lambda x: x * (x > 0), lambda x: 1.0 * (x > 0))
+lrelu = (lambda x: x if x > 0 else 0.01 * x, lambda x: 1 if x > 0 else 0.01)
+softmax = (lambda x: log(1.0 + exp(x)), lambda x: 1.0 / (1.0 + exp(-x)))
 linear = (lambda x: x, lambda x: 1)
 
 
