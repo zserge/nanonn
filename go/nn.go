@@ -87,26 +87,77 @@ type Layer interface {
 }
 
 // Sigmoid activation function and its derivation.
-func sigm(x float64) float64  { return 1 / (1 + math.Exp(-x)) }
-func dsigm(x float64) float64 { return x * (1 - x) }
+func sigmoid(x float64) float64  { return 1 / (1 + math.Exp(-x)) }
+func dsigmoid(x float64) float64 { return x * (1 - x) }
+
+// SoftMax activation function
+func softmax(x float64) float64  { return math.Log(1 + math.Exp(x)) }
+func dsoftmax(x float64) float64 { return 1 / (1 + math.Exp(-x)) }
+
+// Linear activation function
+func linear(x float64) float64  { return x }
+func dlinear(x float64) float64 { return 1 }
+
+// ReLU activation function
+func relu(x float64) float64 {
+	if x > 0 {
+		return x
+	}
+	return 0
+}
+func drelu(x float64) float64 {
+	if x > 0 {
+		return 1
+	}
+	return 0
+}
+
+// Leaky ReLU activation function
+func lrelu(x float64) float64 {
+	if x > 0 {
+		return x
+	}
+	return x * 0.01
+}
+func dlrelu(x float64) float64 {
+	if x > 0 {
+		return 1
+	}
+	return 0.01
+}
 
 // Default implementation of a fully-connected layer.
 type dense struct {
 	weights []float64
 	outputs []float64
 	errors  []float64
+	actFn   func(float64) float64
+	dactFn  func(float64) float64
 }
 
+type DenseOption func(*dense)
+
+func Sigmoid() DenseOption   { return func(l *dense) { l.actFn, l.dactFn = sigmoid, dsigmoid } }
+func ReLU() DenseOption      { return func(l *dense) { l.actFn, l.dactFn = relu, drelu } }
+func LeakyReLU() DenseOption { return func(l *dense) { l.actFn, l.dactFn = lrelu, dlrelu } }
+func SoftMax() DenseOption   { return func(l *dense) { l.actFn, l.dactFn = softmax, dsoftmax } }
+func Linear() DenseOption    { return func(l *dense) { l.actFn, l.dactFn = linear, dlinear } }
+
 // Dense returns a new dense fully-connected layer with sigmoid activation function and the given number of inputs and neurons.
-func Dense(units, inputs int) Layer {
+func Dense(units, inputs int, options ...DenseOption) Layer {
 	l := &dense{
 		weights: make([]float64, units*(inputs+1), units*(inputs+1)),
 		outputs: make([]float64, units, units),
 		errors:  make([]float64, inputs, inputs),
+		actFn:   sigmoid,
+		dactFn:  dsigmoid,
 	}
 	// Initialize weights randomly
 	for i := range l.weights {
 		l.weights[i] = rand.Float64()*2 - 1
+	}
+	for _, opt := range options {
+		opt(l)
 	}
 	return l
 }
@@ -123,7 +174,7 @@ func (l *dense) Forward(x []float64) []float64 {
 		for j := 0; j < l.Inputs(); j++ {
 			sum = sum + x[j]*l.weights[i*N+j]
 		}
-		l.outputs[i] = sigm(sum + l.weights[i*N+N-1])
+		l.outputs[i] = l.actFn(sum + l.weights[i*N+N-1])
 	}
 	return l.outputs
 }
@@ -133,14 +184,14 @@ func (l *dense) Backward(x, e []float64, rate float64) []float64 {
 	for j := 0; j < l.Inputs(); j++ {
 		l.errors[j] = 0
 		for i := 0; i < l.Outputs(); i++ {
-			l.errors[j] += e[i] * dsigm(l.outputs[i]) * l.weights[i*N+j]
+			l.errors[j] += e[i] * l.dactFn(l.outputs[i]) * l.weights[i*N+j]
 		}
 	}
 	for i := 0; i < l.Outputs(); i++ {
 		for j := 0; j < l.Inputs(); j++ {
-			l.weights[i*N+j] += rate * e[i] * dsigm(l.outputs[i]) * x[j]
+			l.weights[i*N+j] += rate * e[i] * l.dactFn(l.outputs[i]) * x[j]
 		}
-		l.weights[i*N+N-1] += rate * e[i] * dsigm(l.outputs[i])
+		l.weights[i*N+N-1] += rate * e[i] * l.dactFn(l.outputs[i])
 	}
 	return l.errors
 }

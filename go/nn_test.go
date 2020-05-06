@@ -13,16 +13,16 @@ import (
 func init() { rand.Seed(time.Now().UnixNano()) }
 
 func TestSigmoid(t *testing.T) {
-	if y := sigm(0); y != 0.5 {
+	if y := sigmoid(0); y != 0.5 {
 		t.Error(y)
 	}
-	if y := sigm(2); math.Abs(y-0.88079708) > 0.0001 {
+	if y := sigmoid(2); math.Abs(y-0.88079708) > 0.0001 {
 		t.Error(y)
 	}
 }
 
 func TestForward(t *testing.T) {
-	l := Dense(1, 3)
+	l := Dense(1, 3, Sigmoid())
 	l.SetWeights([]float64{1.74481176, -0.7612069, 0.3190391, -0.24937038})
 	x1 := []float64{1.62434536, -0.52817175, 0.86540763}
 	y1 := 0.96313579
