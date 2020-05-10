@@ -88,7 +88,7 @@ class Dense(
 
     private val outputs: FloatArray = FloatArray(outputsCount)
     private val errors: FloatArray = FloatArray(inputsCount)
-    var weights: FloatArray = FloatArray(outputsCount * (inputsCount+1))
+    var weights: FloatArray = FloatArray(outputsCount * (inputsCount + 1))
 
     private val rand = Random()
 
@@ -104,9 +104,9 @@ class Dense(
         (0 until outputsCount).forEach { i ->
             var sum = 0f
             (0 until inputsCount).forEach { j ->
-                sum += x[j] * weights[i*n+j]
+                sum += x[j] * weights[i * n + j]
             }
-            outputs[i] = actFn.act(sum + weights[i*n+n-1])
+            outputs[i] = actFn.act(sum + weights[i * n + n - 1])
         }
         return outputs
     }
@@ -140,26 +140,26 @@ interface ActivationFunction {
 
 object Sigmoid : ActivationFunction {
     override fun act(x: Float) = 1 / (1 + exp(-x))
-    override fun dact(x:Float) = x * (1 - x)
+    override fun dact(x: Float) = x * (1 - x)
 }
 
-object SoftMax: ActivationFunction {
+object SoftMax : ActivationFunction {
     override fun act(x: Float) = ln(1 + exp(-x))
-    override fun dact(x:Float) = 1 / (1 + exp(-x))
+    override fun dact(x: Float) = 1 / (1 + exp(-x))
 }
 
-object Linear: ActivationFunction {
+object Linear : ActivationFunction {
     override fun act(x: Float) = x
-    override fun dact(x:Float) = 1f
+    override fun dact(x: Float) = 1f
 }
 
-object ReLU: ActivationFunction {
+object ReLU : ActivationFunction {
     override fun act(x: Float) = if (x > 0) x else 0f
-    override fun dact(x:Float) = if (x > 0) 1f else 0f
+    override fun dact(x: Float) = if (x > 0) 1f else 0f
 }
 
-object LeakyReLU: ActivationFunction {
+object LeakyReLU : ActivationFunction {
     override fun act(x: Float) = if (x > 0) x else x * 0.01f
-    override fun dact(x:Float) = if (x > 0) 1f else 0.01f
+    override fun dact(x: Float) = if (x > 0) 1f else 0.01f
 }
 
