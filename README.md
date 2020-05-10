@@ -25,6 +25,7 @@ In no sense it is a replacement for Tensorflow or PyTorch, but you might find th
 * [JavaScript](js), ES6, less than 1KB minified and gzipped, your browser won't even notice.
 * [Go](go), straight and to the point.
 * [Python](python), it's math after all. No numpy knowledge is required.
+* [Kotlin](kotlin), because Android. Thanks to [@krugloid](https://github.com/krugloid)
 * Java, the most boring one. Coming soon.
 * Swift, at least it's not Objective-C. Coming soon.
 * Rust, because WebAssembly. Help wanted.
