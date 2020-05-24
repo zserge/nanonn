@@ -16,4 +16,4 @@ jobs:
       - name: Kotlin
         run: cd kotlin && ./gradlew check
       - name: Python
-        run: cd python && python3 setup.py test
+        run: cd python && python3 test_nn.py
