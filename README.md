@@ -19,6 +19,8 @@ In no sense it is a replacement for Tensorflow or PyTorch, but you might find th
 * Zero dependencies. Seriously, very lightweight.
 * Comes with tests, benchmarks and examples.
 
+Here's for example an [MNIST demo in JavaScript](https://zserge.com/nanonn/js/mnist.html) to show you what NanoNN can do.
+
 ## Implementations
 
 * [C](c), good old C89, no memory allocations, vectorization where possible.
