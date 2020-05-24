@@ -1,0 +1,19 @@
+name: CI
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: C
+        run: cd c && make
+      - name: Go
+        run: cd go && go test -v .
+      - name: JavaScript
+        run: cd js && npm test
+      - name: Kotlin
+        run: cd kotlin && ./gradlew check
+      - name: Python
+        run cd python && python setup.py test
