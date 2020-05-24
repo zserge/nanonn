@@ -12,7 +12,7 @@ jobs:
       - name: Go
         run: cd go && go test -v .
       - name: JavaScript
-        run: cd js && npm test
+        run: cd js && npm install && npm test
       - name: Kotlin
         run: cd kotlin && ./gradlew check
       - name: Python
