@@ -92,7 +92,10 @@
           predict();
         }
       };
-      canvas.onmousedown = canvas.ontouchstart = () => (paint = true);
+      canvas.onmousedown = canvas.ontouchstart = e => {
+        e.preventDefault();
+        paint = true;
+      };
       canvas.onmouseup = canvas.onmouseleave = canvas.ontouchend = () => {
         paint = false;
         predict();
