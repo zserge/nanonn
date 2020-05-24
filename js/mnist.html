@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>MNIST demo - draw a digit!</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+  </head>
+  <body>
+    <div
+      class="container"
+      style="width: 200px; margin: 0 auto; display: flex; flex-direction: column; align-items: center;"
+    >
+      <div class="results">
+        <span>0</span>
+        <span>1</span>
+        <span>2</span>
+        <span>3</span>
+        <span>4</span>
+        <span>5</span>
+        <span>6</span>
+        <span>7</span>
+        <span>8</span>
+        <span>9</span>
+      </div>
+      <canvas
+        id="canvas"
+        width="200px"
+        height="200px"
+        style="border: 1px solid black;"
+      ></canvas>
+      <canvas
+        id="hiddenCanvas"
+        width="28px"
+        height="28px"
+        style="display: none"
+      ></canvas>
+      <p>
+        Draw a digit! | <a href="">Clear</a> |
+        <a href="https://github.com/zserge/nanonn">Github</a>
+      </p>
+    </div>
+
+    <script type="module">
+      import {NN, Dense, sigmoid, relu, lrelu, softmax} from './nn.js';
+
+      // NanoNN model intance, initializer after the weigths are fetched
+      let nn;
+
+      // Convert canvas to an input vector and predict the drawn digit
+      const predict = () => {
+        if (!nn) {
+          return;
+        }
+        const hiddenCanvas = document.getElementById('hiddenCanvas');
+        const hiddenContext = hiddenCanvas.getContext('2d');
+        hiddenContext.drawImage(canvas, 0, 0, 28, 28);
+        const data = hiddenContext.getImageData(0, 0, 28, 28).data;
+        const x = [];
+        for (let i = 0; i < data.length; i += 4) {
+          x.push(data[i + 3] / 255.0);
+        }
+
+        const z = nn.predict(x);
+        const digit = z
+          .map((x, i) => [x, i])
+          .reduce((r, a) => (a[0] > r[0] ? a : r))[1];
+        const sum = z.reduce((a, b) => a + b * b, 0);
+        for (let i = 0; i < 10; i++) {
+          const el = document.querySelector('.results').children[i];
+          if (i == digit) {
+            el.style.textDecoration = 'underline';
+          } else {
+            el.style.textDecoration = 'none';
+          }
+          el.style.color = `rgba(0, 0, 0, ${(z[i] * z[i]) / sum})`;
+        }
+      };
+
+      // Canvas drawing with mouse or touch
+      const canvas = document.getElementById('canvas');
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = 0x80000000;
+      let paint = false;
+      canvas.onmousemove = canvas.ontouchmove = e => {
+        const rect = e.target.getBoundingClientRect();
+        const x = e.offsetX || e.targetTouches[0].pageX - rect.left;
+        const y = e.offsetY || e.targetTouches[0].pageY - rect.top;
+        if (paint) {
+          const r = 7;
+          ctx.beginPath();
+          ctx.arc(x, y, r, 0, 2 * Math.PI, false);
+          ctx.fill();
+          predict();
+        }
+      };
+      canvas.onmousedown = canvas.ontouchstart = () => (paint = true);
+      canvas.onmouseup = canvas.onmouseleave = canvas.ontouchend = () => {
+        paint = false;
+        predict();
+      };
+
+      // Load weights and create a network model
+      fetch('mnist.json').then(r => {
+        r.json().then(weights => {
+          nn = NN(
+            Dense({
+              inputs: 784,
+              units: 36,
+              act: lrelu,
+              weights: weights[0],
+            }),
+            Dense({
+              inputs: 36,
+              units: 14,
+              act: lrelu,
+              weights: weights[1],
+            }),
+            Dense({
+              inputs: 14,
+              units: 10,
+              act: softmax,
+              weights: weights[2],
+            }),
+          );
+        });
+      });
+    </script>
+  </body>
+</html>
