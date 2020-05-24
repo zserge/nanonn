@@ -32,7 +32,7 @@ struct nn_vec {
 #define NN_FLAG_RELU (1u << 1u)
 #define NN_FLAG_LRELU (2u << 1u)
 #define NN_FLAG_SIGMOID (3u << 1u)
-#define NN_FLAG_SOFTMAX (4u << 1u)
+#define NN_FLAG_SOFTPLUS (4u << 1u)
 #define NN_ACTFN (3u << 1u)
 
 struct nn_layer {
@@ -167,7 +167,7 @@ float nn_train(struct nn_layer *layers, float *x, float *y, float rate) {
 #define NN_ACT_RELU(x) ((x) * ((x) > 0))
 #define NN_ACT_LRELU(x) ((x) > 0 ? (x) : 0.01 * (x))
 #define NN_ACT_SIGMOID(x) (1.0 / (1.0 + exp(-(x))))
-#define NN_ACT_SOFTMAX(x) log(1.0 + exp(x))
+#define NN_ACT_SOFTPLUS(x) log(1.0 + exp(x))
 
 #define NN_ACT_LOOP(i, vec, fn)                                                \
   for ((i) = 0; (i) < (vec).len; (i)++) {                                      \
@@ -202,8 +202,8 @@ static void nn_dense_forward(struct nn_layer *l, int training) {
   case NN_FLAG_SIGMOID:
     NN_ACT_LOOP(i, l->output, NN_ACT_SIGMOID);
     break;
-  case NN_FLAG_SOFTMAX:
-    NN_ACT_LOOP(i, l->output, NN_ACT_SOFTMAX);
+  case NN_FLAG_SOFTPLUS:
+    NN_ACT_LOOP(i, l->output, NN_ACT_SOFTPLUS);
     break;
   }
 }
@@ -212,7 +212,7 @@ static void nn_dense_forward(struct nn_layer *l, int training) {
 #define NN_DACT_RELU(x) (1.0 * ((x) > 0))
 #define NN_DACT_LRELU(x) ((x) > 0 ? 1.0 : 0.01)
 #define NN_DACT_SIGMOID(x) ((x) * (1 - (x)))
-#define NN_DACT_SOFTMAX(x) (1.0 / (1.0 + exp(-x)))
+#define NN_DACT_SOFTPLUS(x) (1.0 / (1.0 + exp(-x)))
 
 static void nn_dense_backward(struct nn_layer *l, float *e, float rate) {
   unsigned int i, j;
@@ -245,9 +245,9 @@ static void nn_dense_backward(struct nn_layer *l, float *e, float rate) {
 			    l->weights.data[i * n + j];
       }
       break;
-    case NN_FLAG_SOFTMAX:
+    case NN_FLAG_SOFTPLUS:
       for (i = 0; i < l->output.len; i++) {
-	sum_e = sum_e + e[i] * NN_DACT_SOFTMAX(l->output.data[i]) *
+	sum_e = sum_e + e[i] * NN_DACT_SOFTPLUS(l->output.data[i]) *
 			    l->weights.data[i * n + j];
       }
       break;
@@ -270,8 +270,8 @@ static void nn_dense_backward(struct nn_layer *l, float *e, float rate) {
     case NN_FLAG_SIGMOID:
       dsigm = NN_DACT_SIGMOID(l->output.data[i]);
       break;
-    case NN_FLAG_SOFTMAX:
-      dsigm = NN_DACT_SOFTMAX(l->output.data[i]);
+    case NN_FLAG_SOFTPLUS:
+      dsigm = NN_DACT_SOFTPLUS(l->output.data[i]);
       break;
     }
     /* This loop is likely to be vectorized */

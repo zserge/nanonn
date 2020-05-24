@@ -95,8 +95,8 @@ export const linear = {
   df: () => 1.0,
 };
 
-/** SoftMax activation function */
-export const softmax = {
+/** SoftPlus activation function */
+export const softplus = {
   f: x => Math.log(1.0 + Math.exp(x)),
   df: x => 1.0 / (1.0 + Math.exp(-x)),
 };

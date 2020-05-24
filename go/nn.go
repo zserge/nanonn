@@ -90,9 +90,9 @@ type Layer interface {
 func sigmoid(x float64) float64  { return 1 / (1 + math.Exp(-x)) }
 func dsigmoid(x float64) float64 { return x * (1 - x) }
 
-// SoftMax activation function
-func softmax(x float64) float64  { return math.Log(1 + math.Exp(x)) }
-func dsoftmax(x float64) float64 { return 1 / (1 + math.Exp(-x)) }
+// SoftPlus activation function
+func softplus(x float64) float64  { return math.Log(1 + math.Exp(x)) }
+func dsoftplus(x float64) float64 { return 1 / (1 + math.Exp(-x)) }
 
 // Linear activation function
 func linear(x float64) float64  { return x }
@@ -140,7 +140,7 @@ type DenseOption func(*dense)
 func Sigmoid() DenseOption   { return func(l *dense) { l.actFn, l.dactFn = sigmoid, dsigmoid } }
 func ReLU() DenseOption      { return func(l *dense) { l.actFn, l.dactFn = relu, drelu } }
 func LeakyReLU() DenseOption { return func(l *dense) { l.actFn, l.dactFn = lrelu, dlrelu } }
-func SoftMax() DenseOption   { return func(l *dense) { l.actFn, l.dactFn = softmax, dsoftmax } }
+func SoftPlus() DenseOption  { return func(l *dense) { l.actFn, l.dactFn = softplus, dsoftplus } }
 func Linear() DenseOption    { return func(l *dense) { l.actFn, l.dactFn = linear, dlinear } }
 
 // Dense returns a new dense fully-connected layer with sigmoid activation function and the given number of inputs and neurons.

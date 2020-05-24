@@ -143,7 +143,7 @@ object Sigmoid : ActivationFunction {
     override fun dact(x: Float) = x * (1 - x)
 }
 
-object SoftMax : ActivationFunction {
+object SoftPlus : ActivationFunction {
     override fun act(x: Float) = ln(1 + exp(-x))
     override fun dact(x: Float) = 1 / (1 + exp(-x))
 }
