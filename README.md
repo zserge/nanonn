@@ -1,5 +1,6 @@
 # nanonn
 
+[![ci](https://github.com/zserge/nanonn/workflows/CI/badge.svg)](https://github.com/zserge/nanonn)
 [![go.dev reference](https://img.shields.io/badge/go.dev-reference-007d9c?logo=go&logoColor=white&style=flat-square)](https://pkg.go.dev/github.com/zserge/nanonn/go)
 [![Go Report Card](https://goreportcard.com/badge/github.com/zserge/nanonn)](https://goreportcard.com/report/github.com/zserge/nanonn)
 
