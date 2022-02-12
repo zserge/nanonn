@@ -10,7 +10,7 @@ pub struct Network {
 
 impl Network {
     pub fn new(layers: Vec<Box<dyn Layer>>) -> Network {
-        assert!(layers.len() > 0, "Network must have at least one layer");
+        assert!(!layers.is_empty(), "Network must have at least one layer");
         let input_count = layers.first().unwrap().input_count();
         let output_count = layers.last().unwrap().output_count();
         let errors = vec![0.0; layers.last().unwrap().output_count()];
@@ -36,22 +36,22 @@ impl Network {
 
     pub fn predict(&mut self, x: &[f64]) -> Vec<f64> {
         assert_eq!(x.len(), self.input_count, "Invalid input size");
-        let mut inputs = x.to_vec();
+        let mut inputs = x;
         for layer in self.layers.iter_mut() {
-            let outputs = layer.forward(&inputs);
+            let outputs = layer.forward(inputs);
             inputs = outputs;
         }
-        inputs
+        inputs.to_vec()
     }
 
     pub fn train(&mut self, x: &[f64], y: &[f64], rate: f64) -> f64 {
         assert_eq!(x.len(), self.input_count, "Invalid input size");
         assert_eq!(y.len(), self.output_count, "Invalid expected output size");
         unsafe {
-            let mut inputs = x.to_vec();
+            let mut inputs = x;
             for (i, layer) in self.layers.iter_mut().enumerate() {
-                *self.inputs.get_unchecked_mut(i) = inputs.clone();
-                let outputs = layer.forward(&inputs);
+                *self.inputs.get_unchecked_mut(i) = inputs.to_vec();
+                let outputs = layer.forward(inputs);
                 inputs = outputs;
             }
             let mut e = 0.0;
@@ -60,9 +60,9 @@ impl Network {
                 let ei = self.errors.get_unchecked(i);
                 e += ei * ei;
             }
-            let mut errors = self.errors.clone();
+            let mut errors = &self.errors;
             for (i, layer) in self.layers.iter_mut().enumerate().rev() {
-                errors = layer.backward(self.inputs.get_unchecked(i), &errors, rate);
+                errors = layer.backward(self.inputs.get_unchecked(i), errors, rate);
             }
             e / y.len() as f64
         }

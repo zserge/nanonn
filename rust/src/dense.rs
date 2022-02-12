@@ -56,31 +56,28 @@ impl Layer for Dense {
         self.weights.clone()
     }
 
-    fn forward(&mut self, input: &[f64]) -> Vec<f64> {
+    fn forward(&mut self, input: &[f64]) -> &Vec<f64> {
         assert_eq!(input.len(), self.input_count, "Invalid input size");
         unsafe {
             let n = self.input_count + 1;
-            let mut outputs = vec![0.0; self.output_count];
             for i in 0..self.output_count {
                 let mut sum = 0.0;
                 for j in 0..self.input_count {
                     sum += input.get_unchecked(j) * self.weights.get_unchecked(i * n + j);
                 }
-                *outputs.get_unchecked_mut(i) = self
+                *self.outputs.get_unchecked_mut(i) = self
                     .activation
                     .activate(sum + self.weights.get_unchecked(i * n + n - 1));
             }
-            self.outputs = outputs.clone();
-            outputs
+            &self.outputs
         }
     }
 
-    fn backward(&mut self, input: &[f64], e: &[f64], rate: f64) -> Vec<f64> {
+    fn backward(&mut self, input: &[f64], e: &[f64], rate: f64) -> &Vec<f64> {
         assert_eq!(input.len(), self.input_count, "Invalid input size");
         assert_eq!(e.len(), self.output_count, "Invalid error size");
         unsafe {
             let n = self.input_count + 1;
-            let mut errors_out = vec![0.0; self.input_count];
             for j in 0..self.input_count {
                 let mut sum = 0.0;
                 for i in 0..self.output_count {
@@ -88,7 +85,7 @@ impl Layer for Dense {
                         * self.activation.derivative(*self.outputs.get_unchecked(i))
                         * self.weights.get_unchecked(i * n + j);
                 }
-                *errors_out.get_unchecked_mut(j) = sum;
+                *self.errors.get_unchecked_mut(j) = sum;
             }
             for i in 0..self.output_count {
                 for j in 0..self.input_count {
@@ -101,8 +98,7 @@ impl Layer for Dense {
                     * e.get_unchecked(i)
                     * self.activation.derivative(*self.outputs.get_unchecked(i));
             }
-            self.errors = errors_out.clone();
-            errors_out
+            &self.errors
         }
     }
 }
