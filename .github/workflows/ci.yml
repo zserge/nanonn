@@ -17,3 +17,5 @@ jobs:
         run: cd kotlin && ./gradlew check
       - name: Python
         run: cd python && python3 test_nn.py
+      - name: Rust
+        run: cd rust && cargo test
